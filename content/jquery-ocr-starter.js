@@ -581,6 +581,82 @@ function StartOCR() {
     var erroredPagesOrImages = 0;
     var totalPagesOrImages = 0;
 
+    const engineTypeSelected = $("input[name=OCREngine]:checked").val();
+    if (engineTypeSelected == 0) {
+        (async () => {
+            $("#animatedProgress").show();
+            $("#btnStartOCR").attr("disabled", 'disabled');
+            const worker = await Tesseract.createWorker('eng');
+            const ret = await worker.recognize(filesToUpload[0]);
+            console.log(ret, ret.data.text);
+            const pageText = ret.data.text;
+            completeText += "\r\n****** Result for Image/Page " + 1 + " ******\r\n" + pageText;
+            
+            JsontextFormat = {
+                ParsedResults: [],
+                OCRExitCode: 1,
+                IsErroredOnProcessing: false,
+                ProcessingTimeInMilliseconds: "",
+                SearchablePDFURL: ""
+            }
+            
+            JsontextFormat.ParsedResults = [{
+                Overlay: {
+                    Lines: ret.data.lines.map(line => {
+                        return {
+                            LineText: line.text,
+                            Words: line.words.map(word => {
+                                return {
+                                    WordText: word.text,
+                                    Left: word.bbox.x0,
+                                    Top: word.bbox.y0,
+                                    Height: Math.abs(word.bbox.y0 - word.bbox.y1),
+                                    Width: Math.abs(word.bbox.x0 - word.bbox.x1)
+                                }
+                            }),
+                            MaxHeight: Math.abs(line.bbox.y0 - line.bbox.y1),
+                            MinTop: line.bbox.y0
+                        }
+                    }),
+                    HasOverlay: true,
+                    Message: `Total lines: ${ret.data.lines.length}`
+                },
+                "FileParseExitCode": 1,
+                "TextOrientation": "0",
+                "ParsedText": ret.data.text,
+                "ErrorDetails": "",
+                "ErrorMessage": "",
+            }];
+
+            var imageDataURL = imageDataSRCs[0];
+            var imageElement = $("<div style='text-align:center;'><div style='position: relative; display: inline-block;'><img style='position: relative; vertical-align: central;' src='" + imageDataURL + "' /></div></div>");
+            var isSetOverlay = true
+            var textOverlay = JsontextFormat.ParsedResults[0]["Overlay"];
+            
+            //Set text overlay for this image
+            if (isSetOverlay && textOverlay && textOverlay["HasOverlay"] == true)
+                SetOverlay(imageElement, textOverlay);
+
+            //Create the image source that will come in the gallery view
+            var imageSourceToReplace = { src: imageElement };
+
+            //push the image source to the image gallery data array - this array will be used to show the gallery of images with overlay
+            imageGalleryData = [imageSourceToReplace];
+
+            $("#txtAreaParsedResult").val(completeText);
+            $("#txtAreaParsedResult").height($("#previewImage").height());
+            $("#jsonResult").val(JSON.stringify(JsontextFormat, null, 2));
+            $("#jsonResult").height($("#previewImage").height());
+            enablePopup()
+            $("#btnStartOCR").removeAttr("disabled");
+            $("#animatedProgress").hide();
+            ShowSuccess("<strong>Parsed Successfully!</strong> All images / pages were parsed successfully.");
+                    
+            await worker.terminate();
+            completeText = '';
+        })();
+    } else {
+
     //If Validated
     if (Validate()) {
         $("#animatedProgress").show();
@@ -884,6 +960,7 @@ function StartOCR() {
         });
     }
 }
+}
 
 //show the searchable PDF URL for download file
 function ShowSearchablePDFURL(CheckedValue, SearchablePDF_URL) {
@@ -1047,6 +1124,22 @@ function GetFileExtension(fileNameOrUrl) {
     return a.pop();
 }
 
+function findWords(wordList, searchList) {
+    wordList = wordList || [];
+    searchList = searchList || [];
+    const searchListLength = searchList.length;
+    const foundAt = [];
+    wordList.forEach( (word, index) => {
+        const subList = wordList.slice(index, index + searchListLength);
+        console.log('sublist', subList)
+        if (_.isEqual(subList, searchList)) {
+            foundAt.push(index);
+        }
+    })
+    console.log(`foundAt - `, foundAt)
+    return foundAt;
+}
+
 //Set overlay on image
 function SetOverlay(imageElement, textOverlay) {
 
@@ -1054,6 +1147,10 @@ function SetOverlay(imageElement, textOverlay) {
 
     var divContent = '';
     var lines = textOverlay["Lines"];
+    console.log('textOverlay ====', textOverlay);
+    // const searchList = ['for', 'your'];
+    const searchList = $('#searchText').val().trim().split(' ');
+    let searchTextoccurenceCounter = 0
 
     //Loop through each line to show words
     $.each(lines, function () {
@@ -1062,16 +1159,38 @@ function SetOverlay(imageElement, textOverlay) {
         var maxLineHeight = $thisLine["MaxHeight"];
         var minLineTopDist = $thisLine["MinTop"];
 
+        const words = $thisLine['Words'];
+        const wordTextList = words.map( word => word.WordText );
+        console.log(wordTextList, searchList);
+        const foundAt = findWords(wordTextList, searchList);
+        const indicesOfFoundWords = foundAt.map( index => {
+            const res = [];
+            for (let i=0; i<searchList.length; i++) {
+                res.push(index+i);
+            }
+            return res;
+        }).flat();
+        console.log('indicesOfFoundWords - ', indicesOfFoundWords)
+
         //Loop through each word to show on top of the text
-        $.each($thisLine["Words"], function () {
-
+        $.each($thisLine["Words"], function (currentWordIndex) {
             $thisWord = $(this)[0];
-
-            divContent = divContent +
-            "<span style=\"position:absolute; left:" + $thisWord["Left"] + "px; top:" + minLineTopDist + "px; height:" + maxLineHeight + "px; width:" + $thisWord["Width"] + "px; text-align:center; font-size: " + ((+maxLineHeight) * 0.8) + "px; font-weight: bold; color: red; background: linear-gradient(" +
-              "rgba(255, 215, 15, 0.5)," +
-              "rgba(255, 215, 15, 0.5)" +
-            ");\">" + $thisWord["WordText"] + "</span>&nbsp;";
+            if (indicesOfFoundWords.indexOf(currentWordIndex) != -1) {
+                if (foundAt.indexOf(currentWordIndex) != -1) {
+                    searchTextoccurenceCounter++;
+                    divContent = divContent +
+                    "<span style=\"position:absolute; left:" + $thisWord["Left"] + "px; top:" + minLineTopDist + "px; height:" + maxLineHeight + "px; width:" + $thisWord["Width"] + "px; text-align:center; font-size: " + ((+maxLineHeight) * 0.8) + "px; font-weight: bold; color: blue; background: lightblue;\">" + `<sup>${searchTextoccurenceCounter}</sup>` + $thisWord["WordText"] + "</span>&nbsp;";
+                } else {
+                divContent = divContent +
+                    "<span style=\"position:absolute; left:" + $thisWord["Left"] + "px; top:" + minLineTopDist + "px; height:" + maxLineHeight + "px; width:" + $thisWord["Width"] + "px; text-align:center; font-size: " + ((+maxLineHeight) * 0.8) + "px; font-weight: bold; color: blue; background: lightblue;\">" + $thisWord["WordText"] + "</span>&nbsp;";
+                }
+            } else {
+                divContent = divContent +
+                    "<span style=\"position:absolute; left:" + $thisWord["Left"] + "px; top:" + minLineTopDist + "px; height:" + maxLineHeight + "px; width:" + $thisWord["Width"] + "px; text-align:center; font-size: " + ((+maxLineHeight) * 0.8) + "px; font-weight: bold; color: red; background: linear-gradient(" +
+                    "rgba(255, 215, 15, 0.5)," +
+                    "rgba(255, 215, 15, 0.5)" +
+                    ");\">" + $thisWord["WordText"] + "</span>&nbsp;";
+            }
         });
 
         divContent = divContent + "<br/>";

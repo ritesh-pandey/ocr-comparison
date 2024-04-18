@@ -41,6 +41,10 @@
             padding-left: 0;
             margin: 0;
         }
+        .headline span {
+            margin-top: 14px;
+            font-size: 32px;
+        }
     </style>
 
     <!-- Google tag (gtag.js) -->
@@ -61,13 +65,13 @@
     <div id="header">
         <!--  HEADER   -->
         <div class="row">
-            <div class="span2">
+            <div class="span2 hide">
                 <!--  Logo  -->
                 <a href="/" id="logo">
                     <img src="/content/ocrspacelogo2020b.png" alt="Online OCR API Logo" class="responsive-img">
                 </a>
             </div>
-            <div class="span10">
+            <div class="span10 hide">
                 <a class="toggleMenu" id="mobile-menu-trigger" href="#"><i class="fa fa-bars"></i></a>
                 <ul class="nav" style="display:block;">
                     <li>
@@ -120,7 +124,7 @@
 
 <div id="content">
     <!--  CONTENT   -->
-    <div id="page-header">
+    <div id="page-header" class="hide">
         <div class="row">
             <div class="span12 whitebg">
                 <h1>Free <span>OCR API</span> and Online OCR</h1>
@@ -160,7 +164,7 @@
             <div class="row">
                 <div class="span12">
                     <h3 class="headline">
-                        <span>Free Online OCR - Convert images and PDF to text (Powered by the <a href="https://ocr.space/OCRAPI">OCR API</a>)</span>
+                        <span>Compare OCR.space and Tesseract.js</span>
                     </h3>
                 </div>
 
@@ -173,9 +177,9 @@
                     </div>
                 </div>
 
-                <div class="span12"><h2 class="boldo">or</h2></div>
+                <div class="span12 hide"><h2 class="boldo">or</h2></div>
 
-                <div class="span12">
+                <div class="span12 hide">
                     <div class="span4">
                         <p>Paste url to source file (.png,.jpg,.webp or .PDF)</p>
                     </div>
@@ -240,7 +244,7 @@
                 </div>
 
 
-                <div class="span12" id="divRotateAndScaleMode">
+                <div class="span12 hide" id="divRotateAndScaleMode">
                     <div class="span4">
                         <p>Detect orientation and <a href="/ocrapi#detectorientation">auto-rotate image if needed</a></p>
                     </div>
@@ -249,7 +253,7 @@
                     </div>
                 </div>
 
-                <div class="span12" id="divOneColumnOnly">
+                <div class="span12 hide" id="divOneColumnOnly">
                     <div class="span4">
                         <p>Do <a href="/receiptscanning">receipt scanning</a> and/or <a href="/tablerecognition">table recognition</a></p>
                     </div>
@@ -258,7 +262,7 @@
                     </div>
                 </div>
 
-                <div class="span12" id="divScale">
+                <div class="span12 hide" id="divScale">
                     <div class="span4">
                         <p><a href="/autoscale">Auto-enlarge</a> content (recommended for <a href="/autoscale#dpi">low DPI</a>)</p>
                     </div>
@@ -267,7 +271,7 @@
                     </div>
                 </div>
 
-                <div class="span12">
+                <div class="span12 hide">
                     <div class="span4" id="searchablepdf">Create <a href="/searchablepdf">Searchable PDF</a></div>
                     <div class="span8">
                         <div class="radio">
@@ -288,19 +292,27 @@
 
 
                 <div class="span12">
-                    <div class="span4"><p>Select <a href="/ocrapi#ocrengine">OCR Engine</a> to use (<a href="https://status.ocr.space/" target="_blank">View current load</a>):</p></div>
+                    <div class="span4"><p>Select OCR Engine to use:</p></div>
                     <div class="span8">
                         <div class="radio">
-                            <label class="col-lg-11" for="engine1"><input type="radio" checked name="OCREngine" value="1" id="engine1">Use OCR Engine1 (Default, fast, most OCR languages)</label>
+                            <label class="col-lg-11" for="engine1"><input type="radio" checked name="OCREngine" value="1" id="engine1">OCR.Space (Engine 1)</label>
+                        </div>
+                        <div class="radio hide">
+                            <label class="col-lg-11" for="engine5"><input type="radio" name="OCREngine" value="5" id="engine5">Use <a href="/ocrapi#ocrengine2">OCR Engine2</a> (Good OCR also for numbers and special characters like <code>%@$</code>)</label>
                         </div>
                         <div class="radio">
-                            <label class="col-lg-11" for="engine5"><input type="radio" name="OCREngine" value="5" id="engine5">Use <a href="/ocrapi#ocrengine2">OCR Engine2</a> (Good OCR also for numbers and special characters like <code>%@$</code>)</label>
+                            <label class="col-lg-11" for="tesseract"><input type="radio" name="OCREngine" value="0" id="tesseract">Use <a href="https://tesseract.projectnaptha.com/">Tesseract.js</a></label>
                         </div>
                     </div>
                 </div>
 
                 <div class="span12">
                     <p></p>
+                </div>
+
+                <div class="span12">
+                    <div class="span4"><p>Text to Highlight:</p></div>
+                    <div class="span8"><textarea id="searchText" rows="2" cols="80"></textarea></div>
                 </div>
 
                 <div class="span12">
@@ -400,7 +412,7 @@
 </form>
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
 
-    <div class="row">
+    <div class="row hide">
         <div class="span12">
             <h3 class="headline">
                 <span>Online OCR - How to use it</span>
@@ -547,7 +559,7 @@
 
 
     <div class="bigborder"></div>
-    <div class="row">
+    <div class="row hide">
         <div class="span3">
             <a href="https://status.ocr.space"><i class="fa fa-bar-chart"></i> View OCR API Performance</a><br />
             <a href="http://www.twitter.com/a9t9_com"><i class="fa fa-twitter"></i> Follow OCR API on X/Twitter</a><br />
@@ -574,7 +586,7 @@
         </div>
     </div>
     <div class="bigborder2"></div>
-    <div id="footer">
+    <div id="footer" class="hide">
         <div id="footer-bottom">
             <div class="row">
                 <div class="span12" id="footer-bottom-widget-area-1">
@@ -596,7 +608,8 @@
     <!-- FOOTER ENDS HERE -->
 
 
-
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
     <script src="/content/modernizr.es?v=qVODBytEBVVePTNtSFXgRX0NCEjh9U_Oj8ePaSiRcGg1"></script>
 
     <script src="/content/jquery.es?v=x_mvfAOKukIQC9y8h8mlbFi86b06-jGT_DnXBz4plZ41"></script>
